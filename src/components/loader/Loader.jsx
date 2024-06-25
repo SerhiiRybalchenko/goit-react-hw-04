@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import css from './Loader.module.css';
 import { DNA } from 'react-loader-spinner';
 
