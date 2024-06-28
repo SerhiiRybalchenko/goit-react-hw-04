@@ -1,13 +1,10 @@
-.list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: center;
-    justify-content: center;
-  }
-  .item {
-    border: 2px solid #fafafa;
-  }
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.galleryItem {
+  width: calc((100% - 60px) / 4);
+  height: 360px;
+}

@@ -1,15 +1,13 @@
-import css from './ErrorMessage.module.css';
+import { FaRegFaceFrown } from 'react-icons/fa6';
+import css from './ErrorMessage.module.css'
 
-function ErrorMessage({ error }) {
+export default function ErrorMessage() {
   return (
-    <div className={css.container}>
-      <h1 className={css.heading}>
-        Error page {error.response && error.response.status}
-      </h1>
-      <p className={css.text}>{error.name && error.name}</p>
-      <p className={css.text}>{error.messaage && error.message}</p>
-      <p className={css.text}>{error.code && error.code}</p>
+    <div>
+      <p className={css.error}>
+        Something went wrong! Please, reload the page!<br/>
+        <FaRegFaceFrown className={ css.errorIcon} />
+      </p>
     </div>
   );
 }
-export default ErrorMessage;

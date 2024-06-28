@@ -16,5 +16,4 @@ export default function Loader() {
         />
       </div>
     );
-// eslint-disable-next-line no-extra-semi
 };
