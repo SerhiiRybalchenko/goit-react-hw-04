@@ -1,18 +1,20 @@
 /* eslint-disable react/prop-types */
-import css from './Loader.module.css';
-import { DNA } from 'react-loader-spinner';
+import { DNA } from "react-loader-spinner";
+import css from './Loader.module.css'
 
-export default function Loader({ width = 180, height = 180 }) {
-  return (
-    <div className={css.wrapper}>
-      <DNA
-        visible={true}
-        height={`${width}px`}
-        width={`${height}px`}
-        ariaLabel="dna-loading"
-        wrapperStyle={{}}
-        wrapperClass={css.loader}
-      />
-    </div>
-  );
-}
+export default function Loader() {
+    return (
+      <div className={css.wrapper}>
+        <DNA
+         visible={true}
+         height="80"
+         width="80"
+         ariaLabel="dna-loading"
+         wrapperStyle={{}}
+         wrapperClass={css.loader}
+         glassColor="#c0efff"
+         color="#0000ff"
+        />
+      </div>
+    );
+};
