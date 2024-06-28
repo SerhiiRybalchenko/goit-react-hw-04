@@ -1,98 +1,104 @@
-import { useEffect, useState } from 'react';
-import getImagesAPI from './GetImagesAPI';
-import SearchBar from './searchBar/SearchBar';
-import ErrorMessage from './errorMessage/ErrorMessage';
-import Loader from '../Loader/Loader';
-import ImageGallery from './ImageGallery/ImageGallery';
-import ImageModal from './ImageModal/ImageModal';
-import LoadMoreBtn from './LoadMoreBtn/LoadMoreBtn';
-import useToggle from './hooks/useToggle';
-import ToTop from './ToTop/ToTop';
-
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
+import getPhotos from '../unsplash-api-fetch';
+import SearchBar from '../SearchBar/SearchBar';
+import ImageGallery from '../ImageGallery/ImageGallery';
+import Loader from '../Loader/Loader';
+import ErrorMessage from '../ErrorMessage/ErrorMessage';
+import LoadMoreBtn from '../LoadMoreBtn/LoadMoreBtn';
+import ImageModal from '../ImageModal/ImageModal';
+
+const modalInitialParams = {
+  isOpen: false,
+  url: '',
+  description: '',
+};
+
 function App() {
-  const [images, setImages] = useState(null);
-  const [toTop, setToTop] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentImage, setCurrentImage] = useState({});
-  const [totalPages, setTotalPages] = useState(1);
-  const [paramsRequest, setParamRequest] = useState({
-    query: '',
-    page: 1,
-    perPage: 10,
-    client_id: '5oq-O0l79UtWEfgesuk7FNxEhMjgmglWAfYeOAPGJFs',
-  });
-  const { isOpen, open, close } = useToggle();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
+  const [modalParams, setModalParams] = useState(modalInitialParams);
 
-  const handleSearch = ({ query }) => {
-    setParamRequest(prevParams => ({
-      ...prevParams,
-      query: query,
-      page: 1,
-    }));
-  };
-  function handleScrollUp() {
-    window.scrollY > 80 ? setToTop(true) : setToTop(false);
-  }
-  useEffect(() => {
-    window.addEventListener('scroll', handleScrollUp);
-    return () => {
-      window.removeEventListener('scroll', handleScrollUp);
-    };
-  }, []);
+  const appRef = useRef();
 
   useEffect(() => {
-    if (paramsRequest.query === '') return; // prevent fetch on mount
-    fetchImages();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paramsRequest.page, paramsRequest.query]);
-
-  const fetchImages = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const { data } = await getImagesAPI(paramsRequest);
-      setTotalPages(data.total_pages);
-      paramsRequest.page === 1
-        ? setImages(data.results)
-        : setImages(pImg => [...pImg, ...data.results]);
-    } catch (error) {
-      setError(error);
-    } finally {
-      setLoading(false);
+    if (searchQuery === '') {
+      return;
     }
+
+    async function getData() {
+      try {
+        setIsLoading(true);
+        setIsError(false);
+        const { results, total_pages } = await getPhotos(searchQuery, page);
+        setImages(prevImages => {
+          return [...prevImages, ...results];
+        });
+        setShowLoadMoreBtn(total_pages && total_pages !== page);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    getData();
+  }, [searchQuery, page]);
+
+  const handleSearch = newQuery => {
+    setSearchQuery(newQuery);
+    setPage(1);
+    setImages([]);
   };
-  function handleOpenModal(image) {
-    setCurrentImage(image);
-    open();
-  }
-  function handleLoadMore() {
-    setParamRequest(prevParams => ({
-      ...prevParams,
-      page: prevParams.page + 1,
-    }));
-  }
+
+  const handleLoadMoreClick = () => {
+    setPage(page + 1);
+  };
+
+  const handleImageClick = (url, description) => {
+    setModalParams({ isOpen: true, url, description });
+  };
+
+  const handleModalClose = () => {
+    setModalParams(modalInitialParams);
+  };
+
+  useEffect(() => {
+    if (page === 1) return;
+
+    appRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [images, page]);
+
   return (
-    <div>
+    <div ref={appRef}>
       <SearchBar onSearch={handleSearch} />
-      {error && <ErrorMessage error={error} />}
-      {images && (
-        <ImageGallery handleOpenModal={handleOpenModal} images={images} />
+
+      {isError && <ErrorMessage />}
+
+      {images.length > 0 && (
+        <ImageGallery items={images} onImageClick={handleImageClick} />
       )}
-      {loading && paramsRequest.page === 1 && <Loader />}
-      {totalPages > 1 && paramsRequest.page < totalPages ? (
-        <LoadMoreBtn handleLoadMore={handleLoadMore} loading={loading} />
-      ) : null}
-      <ImageModal
-        closeModal={close}
-        modalIsOpen={isOpen}
-        currentImage={currentImage}
-      />
-      {toTop && <ToTop />}
+
+      {images.length > 0 && !isLoading && showLoadMoreBtn && (
+        <LoadMoreBtn onClick={handleLoadMoreClick} />
+      )}
+
+      {isLoading && <Loader />}
+      {modalParams && (
+        <ImageModal
+          url={modalParams.url}
+          description={modalParams.description}
+          isOpen={modalParams.isOpen}
+          onClose={handleModalClose}
+        />
+      )}
     </div>
   );
 }
 
-export default App;
+export default App
